@@ -2,14 +2,27 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
 )
 
 // The signing key is usually set in an environment variable:
 // var mySigningKey = os.Get("MY_JWT")
 var mySigningKey = []byte("mysecretphrase")
+
+// REST API - Homepage
+// Generates a new JWT upon request
+func homePage(w http.ResponseWriter, r *http.Request) {
+	validToken, err := generateJWT()
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
+	}
+
+	fmt.Fprintf(w, validToken)
+}
 
 /* JWTs are used in SPAs (single page apps) for authorization, allowing the user to transfer data betwen
 the client and the server using HMAC or public/private keypair encryption */
@@ -36,13 +49,14 @@ func generateJWT() (string, error) {
 	return tokenString, nil
 }
 
+// Handles requetsts to "localhost:9001/"
+func handleRequests() {
+	http.HandleFunc("/", homePage)
+
+	log.Fatal(http.ListenAndServe(":9001", nil))
+}
 func main() {
 	fmt.Println("My Simple Client")
 
-	// Generates a new JWT and prints it to the console.
-	tokenString, err := generateJWT()
-	if err != nil {
-		fmt.Println("Error generating generating token string")
-	}
-	fmt.Println(tokenString)
+	handleRequests()
 }
